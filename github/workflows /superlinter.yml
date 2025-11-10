@@ -4,15 +4,29 @@ permissions: {contents: read, statuses: write}
 
 jobs:
   l:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
-        with: {distribution: temurin, java-version: '17'}
-      - run: |
-          curl -sSLo gjf.jar https://github.com/google/google-java-format/releases/download/v1.22.0/google-java-format-1.22.0-all-deps.jar
-          FILES="$(git ls-files '*.java' || true)"; [ -n "$FILES" ] && java -jar gjf.jar --replace $FILES || true
-      - uses: github/super-linter@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Run Google Java Format
+        run: |
+          curl -L -o gjf.jar https://github.com/google/google-java-format/releases/download/v1.22.0/google-java-format-1.22.0-all-deps.jar
+          $files = git ls-files *.java
+          if ($files) {
+            java -jar gjf.jar --replace $files
+          } else {
+            echo "No Java files found."
+          }
+        shell: pwsh
+
+      - name: Run Super-Linter
+        uses: github/super-linter@v6
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
